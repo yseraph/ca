@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>오늘의 추천 음료</title>
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #f3f3f3;
+      text-align: center;
+      padding: 40px;
+    }
+    .card {
+      background-color: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 24px;
+      max-width: 320px;
+      margin: auto;
+    }
+    .card img {
+      width: 100%;
+      border-radius: 12px;
+    }
+    .drink-name {
+      font-size: 1.5em;
+      margin-top: 16px;
+      font-weight: bold;
+    }
+    .weather-info {
+      font-size: 0.95em;
+      color: #555;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>☀️ 오늘의 최고 음료</h1>
+  <div class="card">
+    <img id="drink-img" src="img/loading.jpg" alt="최고 음료 이미지">
+    <div class="drink-name" id="drink-name">발견 중...</div>
+    <div class="weather-info" id="weather-info">날씨 확인 중...</div>
+  </div>
+
+  <script>
+    const apiKey = "4cde25c8938a0d4d456a6c472e4effad"; // OpenWeather API 키를 붙여주세요
+    const city = "Seoul";
+    const weatherApiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+
+    const drinkMap = [
+      { condition: w => w.weather === "rain", name: "라떼", img: "latte.jpg" },
+      { condition: w => w.weather === "snow", name: "핫초코", img: "hotchoco.jpg" },
+      { condition: w => w.temp > 28, name: "아이스 아메리카노", img: "iceamericano.jpg" },
+      { condition: w => w.temp < 15, name: "핫 아메리카노", img: "hotamericano.jpg" },
+      { condition: () => true, name: "바닐라 라떼", img: "vanillabean.jpg" }
+    ];
+
+    async function fetchWeather() {
+      const response = await fetch(weatherApiUrl);
+      const data = await response.json();
+      return {
+        temp: data.main.temp,
+        weather: data.weather[0].main
+      };
+    }
+
+    function getRecommendation(weatherData) {
+      return drinkMap.find(drink => drink.condition(weatherData));
+    }
+
+    async function showRecommendation() {
+      try {
+        const weather = await fetchWeather();
+        const recommendation = getRecommendation(weather);
+        document.getElementById("drink-name").innerText = recommendation.name;
+        document.getElementById("drink-img").src = "img/" + recommendation.img;
+        document.getElementById("weather-info").innerText = `현재 기온: ${weather.temp.toFixed(1)}℃ / 날씨: ${weather.weather}`;
+      } catch (error) {
+        document.getElementById("drink-name").innerText = "음료 분석에 실패했습니다.";
+        document.getElementById("weather-info").innerText = "";
+        document.getElementById("drink-img").src = "img/error.jpg";
+      }
+    }
+
+    showRecommendation();
+  </script>
+
+</body>
+</html>
